@@ -43,7 +43,7 @@ public class FetchPartnerDataService extends IntentService {
 
     private static final boolean DEBUG = BuildConfig.DEBUG;
 
-    private static final String PARTNER_DATA_FILE_ID = "0B7PDjyAGQlXPbTF4Uno0ZkJta3c";
+    private static final String PARTNER_DATA_FILE_ID = "1EA6jWSn4mEmy2vod-S5vxykkdTWmciEkfFXbDV1FVFU";
 
 
     private static final String ACTION_SYNC_STATE = "org.ekstep.partner.akshara.SYNC_STATE";
@@ -120,7 +120,7 @@ public class FetchPartnerDataService extends IntentService {
             outputStream = new FileOutputStream(downloadFile);
 
             service.files()
-                    .get(PARTNER_DATA_FILE_ID)
+                    .export(PARTNER_DATA_FILE_ID, "text/csv")
                     .executeMediaAndDownloadTo(outputStream);
 
 
