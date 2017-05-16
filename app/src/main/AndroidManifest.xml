@@ -6,6 +6,9 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".Util.Util"
@@ -35,7 +38,16 @@
         <!-- ReadCsv file -->
         <service android:name=".services.CSVService" />
 
-        <activity android:name=".activity.SimplePinAuthActivity"></activity>
+        <activity android:name=".activity.SimplePinAuthActivity" />
+
+        <activity
+            android:name=".activity.DriveSyncActivity"
+             />
+
+        <service
+            android:name=".services.FetchPartnerDataService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

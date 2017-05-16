@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import org.akshara.R;
+import org.akshara.db.PartnerDB;
 import org.akshara.model.UserModel;
 import org.ekstep.genieservices.sdks.Partner;
 import org.ekstep.genieservices.sdks.Telemetry;
@@ -74,9 +75,19 @@ public class Util extends Application {
         editor = sharedPreferences.edit();
     }
 
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        PartnerDB.initDataBase(this);
+
+        PrefUtil.init(this);
+    }
+
     /*
-   *@return String FILE_PATH
-   */
+       *@return String FILE_PATH
+       */
     public static String getFilePath(String fileName) {
 
         try {

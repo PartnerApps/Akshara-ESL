@@ -17,6 +17,7 @@ import org.akshara.R;
 import org.akshara.Util.Util;
 import org.akshara.activity.MainActivity;
 import org.akshara.db.DatabaseHelper;
+import org.akshara.db.StudentDAO;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +104,11 @@ public class SearchChildFragment extends Fragment {
             }
         });
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.spinner_item, mDatabaseHandler.getAllDistrict_Block_Cluster(mContext, "D", "", "", ""));
+        ArrayList<String> districtList = StudentDAO.getInstance().getUniqueFieldData(
+                StudentDAO.COLUMN_DISTRICT, getString(R.string.district_default));
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.spinner_item,
+                districtList);
         spinnerDistric.setAdapter(adapter);
         adapter.setDropDownViewResource(R.layout.spinner_popup_item);
         spinnerDistric.setAdapter(adapter);
@@ -205,7 +210,11 @@ public class SearchChildFragment extends Fragment {
     }
 
     private void setBlockData(String district) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.spinner_item, mDatabaseHandler.getAllDistrict_Block_Cluster(mContext, "B", district, "", ""));
+        ArrayList<String> blockList = StudentDAO.getInstance()
+                .getUniqueFieldData(StudentDAO.COLUMN_BLOCK, getString(R.string.block_default),
+                        StudentDAO.COLUMN_DISTRICT, district);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.spinner_item,
+                blockList);
         spinnerBlock.setAdapter(adapter);
         adapter.setDropDownViewResource(R.layout.spinner_popup_item);
         spinnerBlock.setAdapter(adapter);
@@ -217,7 +226,11 @@ public class SearchChildFragment extends Fragment {
     }
 
     private void setClusterData(String district, String block) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.spinner_item, mDatabaseHandler.getAllDistrict_Block_Cluster(mContext, "C", district, block, ""));
+        ArrayList<String> clusterList = StudentDAO.getInstance()
+                .getUniqueFieldData(StudentDAO.COLUMN_CLUSTER, getString(R.string.cluster_default),
+                        StudentDAO.COLUMN_DISTRICT, StudentDAO.COLUMN_BLOCK, district, block);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.spinner_item,
+                clusterList);
         spinnerCluster.setAdapter(adapter);
         adapter.setDropDownViewResource(R.layout.spinner_popup_item);
         spinnerCluster.setAdapter(adapter);
@@ -230,7 +243,7 @@ public class SearchChildFragment extends Fragment {
     private void setSchoolData(String district, String block, String cluster) {
         Map<String, String> hashMap = new HashMap<>();
 
-        hashMap = mDatabaseHandler.getAllSchool(district, block, cluster);
+        hashMap = StudentDAO.getInstance().getAllSchool(district, block, cluster);
 
         // if(hashMap.size()>1){
         schoolList.clear();

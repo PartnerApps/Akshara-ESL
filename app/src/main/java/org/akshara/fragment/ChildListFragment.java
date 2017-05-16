@@ -43,6 +43,7 @@ import org.akshara.callback.UserProfileResponseHandler;
 import org.akshara.customviews.CustomAutoCompleteView;
 import org.akshara.customviews.MyProgressBar;
 import org.akshara.db.DatabaseHelper;
+import org.akshara.db.StudentDAO;
 import org.akshara.db.StudentInfoDb;
 import org.akshara.model.StudentInfo;
 import org.ekstep.genieservices.aidls.domain.Profile;
@@ -296,7 +297,7 @@ public class ChildListFragment extends Fragment implements IEndSession, IStartSe
        */
         hashMap.put(Util.UID, UID);
 
-        mDatabaseHandler.updateStudentUID(mSelectedStudentId, UID);
+        StudentDAO.getInstance().updateStudentUID(mSelectedStudentId, UID);
 
         if (D)
             Log.d(TAG, "partnerData==>" + hashMap);
@@ -485,9 +486,8 @@ public class ChildListFragment extends Fragment implements IEndSession, IStartSe
                     spinnerCluster_selected = getArguments().getString("spinnerCluster_selected");
                     spinnerSchool_selected = getArguments().getString("spinnerSchool_selected");
                     spinnerSchoolCode_selected = getArguments().getString("spinnerSchoolCode_selected");
-                    studentInfo = mDatabaseHandler.getAllStudentInfoObject(spinnerDistric_selected,
-                            spinnerBlock_selected, spinnerCluster_selected, spinnerSchoolCode_selected,
-                            myAutoComplete.getText().toString().toUpperCase());
+                    studentInfo = StudentDAO.getInstance().getAllStudentInfoObject(
+                            spinnerSchoolCode_selected, myAutoComplete.getText().toString().toUpperCase());
 
                     // update the adapter
                     myAdapter = new ChildsAdapter(getActivity(), R.layout.spinner_popup_item, studentInfo);
