@@ -46,6 +46,7 @@ public final class StudentDAO {
     public static final String COLUMN_CLASS = "class";
     public static final String COLUMN_FATHER_NAME = "father_name";
     public static final String COLUMN_UID = "uid";
+    public static final String COLUMN_SYNC = "sync";
 
 
     private static final String [] ALL_COLUMN_MAP = {
@@ -75,7 +76,8 @@ public final class StudentDAO {
             + COLUMN_SEX + " TEXT,"
             + COLUMN_CLASS + " TEXT,"
             + COLUMN_FATHER_NAME + " TEXT,"
-            + COLUMN_UID + " TEXT"
+            + COLUMN_UID + " TEXT,"
+            + COLUMN_SYNC + " INTEGER DEFAULT 0"
             + ");";
 
 
@@ -321,6 +323,61 @@ public final class StudentDAO {
         }
 
         PartnerDB.getInstance().insert(TABLE_NAME, null, contentValues);
+    }
+
+
+    /**
+     * It'll return the List of Student Information which is not synced to Google Excel
+     * @return List of Student Information in List of list object format
+     */
+    public List<List<Object>> getAllUnSyncedData() {
+        List<List<Object>> allData = new ArrayList<>();
+
+        final String selection = COLUMN_SYNC + " = ?";
+        final String [] selectionArgs = {
+                "1"
+        };
+
+        Cursor cursor = PartnerDB.getInstance().query(TABLE_NAME, DEFAULT_INSERT_COLUMN_MAP,
+                selection, selectionArgs, null, null, null);
+
+        if (cursor != null && cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                List<Object> studentInfo = new ArrayList<>();
+                final int columnCount = cursor.getColumnCount();
+
+                for (int index = 0; index < columnCount; index++) {
+                    studentInfo.add(cursor.getString(index));
+                }
+
+                allData.add(studentInfo);
+            }
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return allData;
+    }
+
+
+    public void updateSyncState(List<List<Object>> syncedData) {
+        if (syncedData != null && syncedData.size() > 0) {
+            for (List<Object> studentInfo : syncedData) {
+                String studentId = studentInfo.get(6).toString();
+
+                final String where = COLUMN_STUDENT_ID + " = ?";
+                final String []whereArgs = {
+                        studentId
+                };
+
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_SYNC, 0);
+
+                PartnerDB.getInstance().update(TABLE_NAME, values, where, whereArgs);
+            }
+        }
     }
 
 

@@ -16,12 +16,12 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import org.akshara.BuildConfig;
 import org.akshara.Util.PrefUtil;
 import org.akshara.activity.DriveSyncActivity;
-import org.akshara.activity.Splashscreeen;
 import org.akshara.db.StudentDAO;
 
 import java.io.IOException;
@@ -44,6 +44,7 @@ public class FetchPartnerDataService extends IntentService {
 
     private static final String SHEETS_DATA_RANGE = "student_info!A2:J";
 
+    private static final String SHEETS_ADD_DATA_RANGE = "student_info!A:J";
 
     private static final String ACTION_SYNC_STATE = "org.ekstep.partner.akshara.SYNC_STATE";
 
@@ -103,6 +104,50 @@ public class FetchPartnerDataService extends IntentService {
                 .setApplicationName(BuildConfig.APPLICATION_ID)
                 .build();
 
+
+        List<List<Object>> dataListNotSync = StudentDAO.getInstance()
+                .getAllUnSyncedData();
+
+
+        if (dataListNotSync.size() > 0) {
+            if (DEBUG) {
+                Log.i(TAG, String.format("downloadDataAndSync: We've to add %d in Excel",
+                        dataListNotSync.size()));
+            }
+
+            ValueRange content = new ValueRange();
+            content.setValues(dataListNotSync);
+
+            try {
+                Sheets.Spreadsheets.Values.Append request = mSheetsService.spreadsheets().values()
+                        .append(PARTNER_DATA_FILE_ID, SHEETS_ADD_DATA_RANGE, content);
+
+                request.setValueInputOption("RAW");
+                request.setInsertDataOption("INSERT_ROWS");
+
+                AppendValuesResponse response = request.execute();
+
+                if (response.getUpdates().getUpdatedRows() == dataListNotSync.size()) {
+                    if (DEBUG) {
+                        Log.i(TAG, "downloadDataAndSync: Successfully Updated data in Excel");
+                    }
+
+                    StudentDAO.getInstance().updateSyncState(dataListNotSync);
+                }
+
+                if (DEBUG) {
+                    Log.i(TAG, "downloadDataAndSync: " + response);
+                }
+
+
+            } catch (IOException ioException) {
+                if (DEBUG) {
+                    Log.e(TAG, "onHandleIntent: ", ioException);
+                }
+            }
+        }
+
+
         try {
 
             if (DEBUG) {
@@ -146,7 +191,7 @@ public class FetchPartnerDataService extends IntentService {
 
                 StudentDAO.getInstance().insertData(contentValues);
 
-                PrefUtil.storeLongValue(Splashscreeen.LAST_SYNC_TIME, System.currentTimeMillis());
+//                PrefUtil.storeLongValue(Splashscreeen.LAST_SYNC_TIME, System.currentTimeMillis());
 
                 LocalBroadcastManager.getInstance(this).sendBroadcast(
                         new Intent(ACTION_SYNC_STATE));

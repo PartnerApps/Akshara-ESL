@@ -736,6 +736,7 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
         HashMap<String, Object> studentInfo = new HashMap<>();
         studentInfo.putAll(hashMapData);
         studentInfo.put(StudentDAO.COLUMN_UID, UID);
+        studentInfo.put(StudentDAO.COLUMN_SYNC, 1);
 
         StudentDAO.getInstance().addNewStudent(studentInfo);
 
