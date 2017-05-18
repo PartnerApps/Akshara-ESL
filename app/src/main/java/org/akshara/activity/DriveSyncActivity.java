@@ -21,7 +21,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.sheets.v4.SheetsScopes;
 
 import org.akshara.R;
 import org.akshara.Util.PrefUtil;
@@ -35,7 +35,10 @@ import java.util.Arrays;
 public class DriveSyncActivity extends AppCompatActivity {
 
     public static final String[] SCOPES = {
-            DriveScopes.DRIVE_READONLY
+            SheetsScopes.DRIVE,
+            SheetsScopes.DRIVE_FILE,
+            SheetsScopes.SPREADSHEETS,
+            SheetsScopes.SPREADSHEETS_READONLY
     };
 
     public static final String PREF_ACCOUNT_NAME = "accountName";
@@ -52,7 +55,16 @@ public class DriveSyncActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
-                moveToLoginScreen();
+                boolean isRecoverableError = intent.getBooleanExtra(
+                        FetchPartnerDataService.EXTRA_IS_USER_RECOVERABLE_ERROR, false);
+
+                if (isRecoverableError) {
+                    Intent recoverableErrorIntent = intent
+                            .getParcelableExtra(FetchPartnerDataService.EXTRA_RECOVERABLE_INTENT);
+                    startActivityForResult(recoverableErrorIntent, REQUEST_AUTHORIZATION);
+                } else {
+                    moveToLoginScreen();
+                }
             }
         }
     };

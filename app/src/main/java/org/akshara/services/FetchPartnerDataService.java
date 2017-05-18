@@ -4,19 +4,19 @@ import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.drive.Drive;
-import com.opencsv.CSVReader;
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.ValueRange;
 
 import org.akshara.BuildConfig;
 import org.akshara.Util.PrefUtil;
@@ -24,9 +24,6 @@ import org.akshara.activity.DriveSyncActivity;
 import org.akshara.activity.Splashscreeen;
 import org.akshara.db.StudentDAO;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,8 +42,16 @@ public class FetchPartnerDataService extends IntentService {
 
     private static final String PARTNER_DATA_FILE_ID = "1EA6jWSn4mEmy2vod-S5vxykkdTWmciEkfFXbDV1FVFU";
 
+    private static final String SHEETS_DATA_RANGE = "student_info!A2:J";
+
 
     private static final String ACTION_SYNC_STATE = "org.ekstep.partner.akshara.SYNC_STATE";
+
+    public static final String EXTRA_IS_USER_RECOVERABLE_ERROR
+            = "org.ekstep.partner.akshara.IS_RECOVERABLE_ERROR";
+
+    public static final String EXTRA_RECOVERABLE_INTENT
+            = "org.ekstep.partner.akshara.RECOVERABLE_INTENT";
 
 
     static final String DOWNLOAD_FILE_PATH = "/Akshara-ESL/tmp/file.csv";
@@ -72,12 +77,12 @@ public class FetchPartnerDataService extends IntentService {
             Log.i(TAG, "onHandleIntent: ");
         }
 
-        downloadData();
+        downloadDataAndSync();
     }
 
-    private void downloadData() {
+    private void downloadDataAndSync() {
         if (DEBUG) {
-            Log.i(TAG, "downloadData: ");
+            Log.i(TAG, "downloadDataAndSync: ");
         }
 
         GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
@@ -94,115 +99,80 @@ public class FetchPartnerDataService extends IntentService {
         HttpTransport transport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
-        Drive service = new Drive.Builder(transport, jsonFactory, credential)
+        Sheets mSheetsService = new Sheets.Builder(transport, jsonFactory, credential)
                 .setApplicationName(BuildConfig.APPLICATION_ID)
                 .build();
 
-
-        FileOutputStream outputStream = null;
-        File downloadFile = null;
-
-
         try {
 
-            String downloadLocation = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + DOWNLOAD_FILE_PATH;
-
             if (DEBUG) {
-                Log.i(TAG, "onHandleIntent: Location " + downloadLocation);
+                Log.i(TAG, "onHandleIntent: ");
             }
 
-            downloadFile = new File(downloadLocation);
+            ValueRange valueRange = mSheetsService.spreadsheets().values()
+                    .get(PARTNER_DATA_FILE_ID, SHEETS_DATA_RANGE)
+                    .execute();
 
-            //noinspection ResultOfMethodCallIgnored
-            downloadFile.getParentFile().mkdirs();
+            List<List<Object>> values = valueRange.getValues();
 
-            outputStream = new FileOutputStream(downloadFile);
-
-            service.files()
-                    .export(PARTNER_DATA_FILE_ID, "text/csv")
-                    .executeMediaAndDownloadTo(outputStream);
-
-
-        } catch (IOException e) {
-            if (DEBUG) {
-                Log.e(TAG, "onHandleIntent: ", e);
-            }
-        } finally {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
+            if (values != null) {
+                if (DEBUG) {
+                    Log.i(TAG, "downloadDataAndSync: Column Data Size : " + values.size());
                 }
-            } catch (IOException ignored) {
-            }
-        }
 
-        if (DEBUG) {
-            Log.i(TAG, "onHandleIntent: Download Completed");
-        }
-
-        if (downloadFile.exists()) {
-            syncDatabase(downloadFile);
-        }
-    }
+                List<ContentValues> contentValues = new ArrayList<>();
 
 
-    private void syncDatabase(File downloadFile) {
-        if (DEBUG) {
-            Log.i(TAG, "syncDatabase: ");
-        }
-
-        CSVReader csvReader = null;
-
-        try {
-            csvReader = new CSVReader(new FileReader(downloadFile));
-
-            String[] nextLine;
-
-            if (csvReader.readNext() != null) {
-                // First line always header so skip it
-                List<ContentValues> valuesList = new ArrayList<>();
-
-                while ((nextLine = csvReader.readNext()) != null) {
+                for (List row : values) {
                     if (DEBUG) {
-                        Log.i(TAG, String.format("syncDatabase: Count %d", nextLine.length));
+                        Log.i(TAG, "downloadDataAndSync: Row Data Size : " + row.size());
                     }
 
-                    if (StudentDAO.DEFAULT_INSERT_COLUMN_MAP.length == nextLine.length) {
-                        ContentValues values = new ContentValues();
-                        for (int index = 0; index < nextLine.length; index++) {
-                            values.put(StudentDAO.DEFAULT_INSERT_COLUMN_MAP[index],
-                                    nextLine[index]);
+                    if (row.size() == StudentDAO.DEFAULT_INSERT_COLUMN_MAP.length) {
+                        if (DEBUG) {
+                            Log.i(TAG, "downloadDataAndSync: Inserting Data...!");
                         }
 
-                        valuesList.add(values);
+                        ContentValues insertValues = new ContentValues();
+
+                        for (int index = 0; index < row.size(); index++) {
+                            insertValues.put(StudentDAO.DEFAULT_INSERT_COLUMN_MAP[index],
+                                    row.get(index).toString());
+                        }
+
+                        contentValues.add(insertValues);
                     }
                 }
 
-                StudentDAO.getInstance().insertData(valuesList);
+                StudentDAO.getInstance().insertData(contentValues);
 
                 PrefUtil.storeLongValue(Splashscreeen.LAST_SYNC_TIME, System.currentTimeMillis());
 
                 LocalBroadcastManager.getInstance(this).sendBroadcast(
                         new Intent(ACTION_SYNC_STATE));
+
             }
 
-
-        } catch (IOException e) {
+        } catch (IOException ioException) {
             if (DEBUG) {
-                Log.e(TAG, "syncDatabase: ", e);
+                Log.e(TAG, "onHandleIntent: ", ioException);
             }
-        } finally {
-            //noinspection ResultOfMethodCallIgnored
-            downloadFile.delete();
-            if (csvReader != null) {
-                try {
-                    csvReader.close();
-                } catch (IOException ignored) {
 
-                }
+            if (ioException instanceof UserRecoverableAuthIOException) {
+                UserRecoverableAuthIOException ex = (UserRecoverableAuthIOException) ioException;
+
+                Intent intent = new Intent(ACTION_SYNC_STATE);
+
+                intent.putExtra(EXTRA_IS_USER_RECOVERABLE_ERROR, true);
+                intent.putExtra(EXTRA_RECOVERABLE_INTENT, ex.getIntent());
+
+                LocalBroadcastManager.getInstance(this).sendBroadcast(
+                        intent);
             }
         }
 
+        if (DEBUG) {
+            Log.i(TAG, "onHandleIntent: Download And Sync Completed");
+        }
     }
 }

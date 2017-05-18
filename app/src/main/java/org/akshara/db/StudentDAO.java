@@ -12,6 +12,7 @@ import org.akshara.model.StudentInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A DAO class for creating Student Information
@@ -88,8 +89,8 @@ public final class StudentDAO {
             COLUMN_STUDENT_ID,
             COLUMN_CHILD_NAME,
             COLUMN_SEX,
-            COLUMN_CLASS,
             COLUMN_FATHER_NAME,
+            COLUMN_CLASS,
     };
 
 
@@ -302,6 +303,24 @@ public final class StudentDAO {
             cursor.close();
         }
         return hashMap;
+    }
+
+
+    /**
+     * Add student information into the local database
+     * @param studentMap HashMap contain the student information
+     */
+    public void addNewStudent(HashMap<String, Object> studentMap) {
+        ContentValues contentValues = new ContentValues();
+
+        Set<String> keySet = studentMap.keySet();
+
+        for (String key : keySet) {
+            String value = studentMap.get(key).toString();
+            contentValues.put(key, value);
+        }
+
+        PartnerDB.getInstance().insert(TABLE_NAME, null, contentValues);
     }
 
 

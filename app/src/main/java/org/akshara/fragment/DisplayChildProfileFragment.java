@@ -51,7 +51,7 @@ import org.akshara.callback.UserProfileResponseHandler;
 import org.akshara.customviews.CustomEditText;
 import org.akshara.customviews.CustomTextView;
 import org.akshara.customviews.MyProgressBar;
-import org.akshara.db.StudentInfoDb;
+import org.akshara.db.StudentDAO;
 import org.akshara.model.Age;
 import org.akshara.model.UserModel;
 import org.ekstep.genieservices.aidls.domain.Profile;
@@ -370,10 +370,10 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
                     } else {
                         //send Data to Genie services
                         handle = child_name.getText().toString();
-                        hashMapData.put(StudentInfoDb.CHILD_NAME, child_name.getText().toString().trim());
-                        hashMapData.put(StudentInfoDb.FATHER_NAME, father_name.getText().toString().trim());
-                        hashMapData.put(StudentInfoDb._CLASS, spinnerClass.getSelectedItem().toString().trim());
-                        hashMapData.put(StudentInfoDb.SEX, spinnerGender.getSelectedItem().toString().toLowerCase().trim());
+                        hashMapData.put(StudentDAO.COLUMN_CHILD_NAME, child_name.getText().toString().trim());
+                        hashMapData.put(StudentDAO.COLUMN_FATHER_NAME, father_name.getText().toString().trim());
+                        hashMapData.put(StudentDAO.COLUMN_CLASS, spinnerClass.getSelectedItem().toString().trim());
+                        hashMapData.put(StudentDAO.COLUMN_SEX, spinnerGender.getSelectedItem().toString().toLowerCase().trim());
 //                        hashMapData.put(StudentInfoDb.dob, mTxt_dob.getText().toString().trim());
                         code = code_language_List.get(spinnerLanguage.getSelectedItem().toString());
                         registerChild();
@@ -393,11 +393,11 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
         scrollViewChildContainer.setVisibility(View.GONE);
 
         Util util = (Util) mContext.getApplicationContext();
-        hashMapData.put(StudentInfoDb.DISTRICT, util.getSpinnerDistric_selected().trim());
-        hashMapData.put(StudentInfoDb.BLOCK, util.getSpinnerBlock_selected().trim());
-        hashMapData.put(StudentInfoDb.CLUST, util.getSpinnerCluster_selected().trim());
-        hashMapData.put(StudentInfoDb.SCHOOL_NAME, util.getSpinnerSchool_selected().trim());
-        hashMapData.put(StudentInfoDb.SCHOOL_CODE, util.getSpinnerSchoolCode_selected().toLowerCase().trim());
+        hashMapData.put(StudentDAO.COLUMN_DISTRICT, util.getSpinnerDistric_selected().trim());
+        hashMapData.put(StudentDAO.COLUMN_BLOCK, util.getSpinnerBlock_selected().trim());
+        hashMapData.put(StudentDAO.COLUMN_CLUSTER, util.getSpinnerCluster_selected().trim());
+        hashMapData.put(StudentDAO.COLUMN_SCHOOL_NAME, util.getSpinnerSchool_selected().trim());
+        hashMapData.put(StudentDAO.COLUMN_SCHOOL_CODE, util.getSpinnerSchoolCode_selected().toLowerCase().trim());
 
 
         // hashMapData.put(StudentInfoDb.mother_tongue,code.trim());
@@ -641,8 +641,8 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
         //2. Create Profile
         profile = new Profile(handle, Util.avatar, code);
         try {
-            profile.setStandard(Integer.parseInt("" + hashMapData.get(StudentInfoDb._CLASS)));
-            profile.setGender("" + hashMapData.get(StudentInfoDb.SEX));
+            profile.setStandard(Integer.parseInt("" + hashMapData.get(StudentDAO.COLUMN_CLASS)));
+            profile.setGender("" + hashMapData.get(StudentDAO.COLUMN_SEX));
 //            profile.setAge(Age.getChildAge(mContext,"" + hashMapData.get(StudentInfoDb.dob)));
         } catch (Exception e) {
             if (D) Log.e(TAG, "Exception in profile while setting dynamic form" + e);
@@ -731,6 +731,14 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
         //3. setCurrentUser
         currentuserSetResponseHandler = new CurrentuserResponseHandler(this);
         UID = hashMap.get("uid");
+
+
+        HashMap<String, Object> studentInfo = new HashMap<>();
+        studentInfo.putAll(hashMapData);
+        studentInfo.put(StudentDAO.COLUMN_UID, UID);
+
+        StudentDAO.getInstance().addNewStudent(studentInfo);
+
         if (D)
             Log.d(TAG, "onSuccessUserProfile profile.getUid() :" + UID);
         userProfile.setCurrentUser(UID, currentuserSetResponseHandler);
