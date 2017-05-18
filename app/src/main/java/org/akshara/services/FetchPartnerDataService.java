@@ -22,6 +22,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import org.akshara.BuildConfig;
 import org.akshara.Util.PrefUtil;
 import org.akshara.activity.DriveSyncActivity;
+import org.akshara.activity.Splashscreeen;
 import org.akshara.db.StudentDAO;
 
 import java.io.IOException;
@@ -191,7 +192,7 @@ public class FetchPartnerDataService extends IntentService {
 
                 StudentDAO.getInstance().insertData(contentValues);
 
-//                PrefUtil.storeLongValue(Splashscreeen.LAST_SYNC_TIME, System.currentTimeMillis());
+                PrefUtil.storeLongValue(Splashscreeen.LAST_SYNC_TIME, System.currentTimeMillis());
 
                 LocalBroadcastManager.getInstance(this).sendBroadcast(
                         new Intent(ACTION_SYNC_STATE));
