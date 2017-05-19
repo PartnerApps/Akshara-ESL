@@ -16,7 +16,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.model.AppendValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import org.akshara.BuildConfig;
@@ -106,47 +105,48 @@ public class FetchPartnerDataService extends IntentService {
                 .build();
 
 
-        List<List<Object>> dataListNotSync = StudentDAO.getInstance()
-                .getAllUnSyncedData();
-
-
-        if (dataListNotSync.size() > 0) {
-            if (DEBUG) {
-                Log.i(TAG, String.format("downloadDataAndSync: We've to add %d in Excel",
-                        dataListNotSync.size()));
-            }
-
-            ValueRange content = new ValueRange();
-            content.setValues(dataListNotSync);
-
-            try {
-                Sheets.Spreadsheets.Values.Append request = mSheetsService.spreadsheets().values()
-                        .append(PARTNER_DATA_FILE_ID, SHEETS_ADD_DATA_RANGE, content);
-
-                request.setValueInputOption("RAW");
-                request.setInsertDataOption("INSERT_ROWS");
-
-                AppendValuesResponse response = request.execute();
-
-                if (response.getUpdates().getUpdatedRows() == dataListNotSync.size()) {
-                    if (DEBUG) {
-                        Log.i(TAG, "downloadDataAndSync: Successfully Updated data in Excel");
-                    }
-
-                    StudentDAO.getInstance().updateSyncState(dataListNotSync);
-                }
-
-                if (DEBUG) {
-                    Log.i(TAG, "downloadDataAndSync: " + response);
-                }
-
-
-            } catch (IOException ioException) {
-                if (DEBUG) {
-                    Log.e(TAG, "onHandleIntent: ", ioException);
-                }
-            }
-        }
+//        We're now disable Writing the data back to the Excel
+//        List<List<Object>> dataListNotSync = StudentDAO.getInstance()
+//                .getAllUnSyncedData();
+//
+//
+//        if (dataListNotSync.size() > 0) {
+//            if (DEBUG) {
+//                Log.i(TAG, String.format("downloadDataAndSync: We've to add %d in Excel",
+//                        dataListNotSync.size()));
+//            }
+//
+//            ValueRange content = new ValueRange();
+//            content.setValues(dataListNotSync);
+//
+//            try {
+//                Sheets.Spreadsheets.Values.Append request = mSheetsService.spreadsheets().values()
+//                        .append(PARTNER_DATA_FILE_ID, SHEETS_ADD_DATA_RANGE, content);
+//
+//                request.setValueInputOption("RAW");
+//                request.setInsertDataOption("INSERT_ROWS");
+//
+//                AppendValuesResponse response = request.execute();
+//
+//                if (response.getUpdates().getUpdatedRows() == dataListNotSync.size()) {
+//                    if (DEBUG) {
+//                        Log.i(TAG, "downloadDataAndSync: Successfully Updated data in Excel");
+//                    }
+//
+//                    StudentDAO.getInstance().updateSyncState(dataListNotSync);
+//                }
+//
+//                if (DEBUG) {
+//                    Log.i(TAG, "downloadDataAndSync: " + response);
+//                }
+//
+//
+//            } catch (IOException ioException) {
+//                if (DEBUG) {
+//                    Log.e(TAG, "onHandleIntent: ", ioException);
+//                }
+//            }
+//        }
 
 
         try {
