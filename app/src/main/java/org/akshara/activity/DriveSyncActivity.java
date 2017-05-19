@@ -252,6 +252,8 @@ public class DriveSyncActivity extends AppCompatActivity {
     private void moveToLoginScreen() {
         Intent syncIntent = new Intent(DriveSyncActivity.this, MainActivity.class);
         startActivity(syncIntent);
+
+        finish();
     }
 
 
