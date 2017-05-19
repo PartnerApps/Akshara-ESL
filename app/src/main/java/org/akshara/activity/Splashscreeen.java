@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -66,7 +67,10 @@ public class Splashscreeen extends Activity implements IRegister {
         } else {
             Toast.makeText(this, "Genie must be installed for App work", Toast.LENGTH_SHORT)
                     .show();
-            finish();
+            Intent openPlayStore = new Intent(Intent.ACTION_VIEW);
+            openPlayStore.setData(Uri.parse(
+                    "https://play.google.com/store/apps/details?id=org.ekstep.genieservices"));
+            startActivity(openPlayStore);
         }
     }
 
