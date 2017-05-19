@@ -21,6 +21,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import org.akshara.BuildConfig;
 import org.akshara.R;
 import org.akshara.Util.TelemetryEventGenertor;
 import org.akshara.Util.Util;
@@ -58,7 +59,7 @@ import java.util.Map;
 
 public class ChildListFragment extends Fragment implements IEndSession, IStartSession, IPartnerData,
         IUserProfile, ICurrentUser, ICurrentGetUser, ITelemetryData {
-    private boolean D = Util.DEBUG;
+    private boolean D = BuildConfig.DEBUG;
     private String TAG = ChildListFragment.class.getSimpleName();
     private Context mContext;
     private DatabaseHelper mDatabaseHandler;
@@ -96,6 +97,12 @@ public class ChildListFragment extends Fragment implements IEndSession, IStartSe
     private boolean myAutoCompleteTextChange = false;
 
     private String mSelectedStudentId;
+
+    /**
+     * Flag value to decide we're creating a new Child or using Existing Child
+     * By default it'll be false.
+     */
+    private boolean mIsCreateNewChild = false;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -248,10 +255,11 @@ public class ChildListFragment extends Fragment implements IEndSession, IStartSe
            currentuserSetResponseHandler = new CurrentuserResponseHandler(this);
            if (D)
                Log.d(TAG, "onSuccessEndSession UID :" + UID);
+           mIsCreateNewChild = false;
            userProfile.setCurrentUser(UID, currentuserSetResponseHandler);
        } else {
            String language = "en";
-
+           mIsCreateNewChild = true;
            //2. Create Profile
            try {
                profile = new Profile("" + hashMap.get(StudentInfoDb.CHILD_NAME), Util.avatar, language);
@@ -297,11 +305,19 @@ public class ChildListFragment extends Fragment implements IEndSession, IStartSe
        */
         hashMap.put(Util.UID, UID);
 
+        HashMap<String, Object> partnerData = new HashMap<>();
+        partnerData.put(Util.UID, UID);
+        partnerData.put(StudentInfoDb.STUDENT_ID, hashMap.get(StudentInfoDb.STUDENT_ID));
+
+        if (mIsCreateNewChild) {
+            partnerData.putAll(hashMap);
+        }
+
         StudentDAO.getInstance().updateStudentUID(mSelectedStudentId, UID);
 
         if (D)
-            Log.d(TAG, "partnerData==>" + hashMap);
-        partner.sendData(Util.partnerId, hashMap, partnerDataResponseHandler);
+            Log.d(TAG, "partnerData==>" + partnerData);
+        partner.sendData(Util.partnerId, partnerData, partnerDataResponseHandler);
 
     }
 
