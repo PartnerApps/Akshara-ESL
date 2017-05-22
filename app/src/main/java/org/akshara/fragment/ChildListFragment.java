@@ -396,6 +396,39 @@ public class ChildListFragment extends Fragment implements IEndSession, IStartSe
         if (D)
             Log.d(TAG, "onFailureCurrentUser :" + result);
 
+
+        if (D) {
+            Log.d(TAG, "onFailureCurrentUser :" + result);
+        }
+
+        if (genieResponse.getError() != null
+                && genieResponse.getError().equals("INVALID_USER")) {
+
+
+            if (D) {
+                Log.i(TAG, "onFailureCurrentUser: Invalid UID creating the Child Again");
+            }
+
+            String handle = hashMap.get(StudentInfoDb.CHILD_NAME).toString();
+            String gender = hashMap.get(StudentInfoDb.SEX).toString();
+            Profile profile = new Profile(handle, "Avatar","en");
+
+            if (!TextUtils.isEmpty(gender)) {
+                profile.setGender(gender);
+            }
+
+
+            if (userProfile == null) {
+                Util util = (Util) mContext.getApplicationContext();
+                userProfile = util.getUserProfile();
+            }
+
+            mIsCreateNewChild = true;
+
+            userProfileResponseHandler = new UserProfileResponseHandler(ChildListFragment.this);
+            userProfile.createUserProfile(profile, userProfileResponseHandler);
+        }
+
     }
 
     @Override
