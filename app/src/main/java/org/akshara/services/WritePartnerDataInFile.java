@@ -25,6 +25,7 @@ import com.opencsv.CSVWriter;
 
 import org.akshara.BuildConfig;
 import org.akshara.Util.PrefUtil;
+import org.akshara.activity.DriveSyncActivity;
 import org.akshara.db.StudentDAO;
 
 import java.io.FileInputStream;
@@ -79,6 +80,7 @@ public class WritePartnerDataInFile extends Service implements
                     .addScope(Drive.SCOPE_FILE)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
+                    .setAccountName(PrefUtil.getString(DriveSyncActivity.PREF_ACCOUNT_NAME))
                     .build();
         }
 
