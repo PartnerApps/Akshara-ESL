@@ -2,6 +2,7 @@ package org.akshara.fragment;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -54,6 +55,7 @@ import org.akshara.customviews.MyProgressBar;
 import org.akshara.db.StudentDAO;
 import org.akshara.model.Age;
 import org.akshara.model.UserModel;
+import org.akshara.services.WritePartnerDataInFile;
 import org.ekstep.genieservices.aidls.domain.Profile;
 import org.ekstep.genieservices.sdks.Partner;
 import org.ekstep.genieservices.sdks.Telemetry;
@@ -739,6 +741,12 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
         studentInfo.put(StudentDAO.COLUMN_SYNC, 1);
 
         StudentDAO.getInstance().addNewStudent(studentInfo);
+
+
+        if (getActivity() != null) {
+            Intent intent = new Intent(getActivity(), WritePartnerDataInFile.class);
+            getActivity().startService(intent);
+        }
 
         if (D)
             Log.d(TAG, "onSuccessUserProfile profile.getUid() :" + UID);
