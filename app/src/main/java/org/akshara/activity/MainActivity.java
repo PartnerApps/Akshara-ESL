@@ -39,6 +39,7 @@ import org.ekstep.genieservices.sdks.response.GenieResponse;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements DelegateAction, NavigationDrawer.FragmentDrawerListener,
         ILanguage, ITelemetryData {
@@ -305,6 +306,23 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
                 //throw new PackageManager.NameNotFoundException();
             }
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+            intent.putExtra("audience","learner");
+//            intent.putExtra("channel","AP_1");
+            HashMap<String,String> programTag=new HashMap<>();
+            programTag.put("name", Util.partnerId);
+            programTag.put("desc","Default Partner tag for Akshara ESL");
+
+            // TODO: 23/5/17 Later add optimization for Partner Dates
+            programTag.put("startDate","2017-05-23");
+            programTag.put("endDate","2117-05-26");
+
+            intent.putExtra("program_tag", programTag);
+//            intent.putExtra("language","hi");
+            intent.putExtra("mode","soft");
+
 
             context.startActivity(intent);
             finish();
