@@ -62,6 +62,23 @@ public class Splashscreeen extends Activity implements IRegister {
         setContentView(R.layout.activity_splashscreen);
 
 
+//        if (Utils.isAppInstalled(this, Util.PACKAGENAME)) {
+//            registerPartnerApp();
+//        } else {
+//            Toast.makeText(this, "Genie must be installed for App work", Toast.LENGTH_SHORT)
+//                    .show();
+//            Intent openPlayStore = new Intent(Intent.ACTION_VIEW);
+//            openPlayStore.setData(Uri.parse(
+//                    "https://play.google.com/store/apps/details?id=org.ekstep.genieservices"));
+//            startActivity(openPlayStore);
+//        }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
         if (Utils.isAppInstalled(this, Util.PACKAGENAME)) {
             registerPartnerApp();
         } else {
