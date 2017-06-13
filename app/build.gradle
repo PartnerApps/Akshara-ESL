@@ -57,16 +57,21 @@ android {
 }
 
 dependencies {
+    def GENIE_INTEGRATION_SDK = '0.1.113'
+
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:recyclerview-v7:23.0.1'
     compile 'com.jayway.android.robotium:robotium-solo:5.4.1'
     compile('com.afollestad.material-dialogs:core:0.8.3.0@aar') {
         transitive = true
     }
-    compile "org.ekstep.genieservices:sdks:1.5.17@aar"
-    compile "org.ekstep.genieservices:aidls:1.5.17@aar"
+//    compile "org.ekstep.genieservices:sdks:1.5.17@aar"
+//    compile "org.ekstep.genieservices:aidls:1.5.17@aar"
     compile 'com.github.clans:fab:1.6.1'
 
+    compile "org.ekstep.genieservices:commons:$GENIE_INTEGRATION_SDK"
+    compile "org.ekstep.genieservices:genie-integration:$GENIE_INTEGRATION_SDK"
+    compile 'com.google.code.gson:gson:2.8.1'
 
     compile "com.google.android.gms:play-services-auth:10.2.4"
     compile "com.google.android.gms:play-services-drive:10.2.4"

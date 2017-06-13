@@ -18,10 +18,8 @@ import com.google.gson.reflect.TypeToken;
 import org.akshara.R;
 import org.akshara.db.PartnerDB;
 import org.akshara.model.UserModel;
-import org.ekstep.genieservices.sdks.Partner;
-import org.ekstep.genieservices.sdks.Telemetry;
-import org.ekstep.genieservices.sdks.UserProfile;
-import org.ekstep.genieservices.sdks.response.GenieResponse;
+import org.ekstep.genieresolvers.GenieSDK;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 import java.io.File;
 import java.lang.reflect.Type;
@@ -61,9 +59,9 @@ public class Util extends Application {
     private String PARTNER_REG = "partnerreg";
     private String spinnerDistric_selected, spinnerBlock_selected, spinnerCluster_selected, spinnerSchool_selected, spinnerSchoolCode_selected;
     private String language;
-    private Partner partner;
-    private UserProfile userProfile;
-    private Telemetry telemetry;
+//    private Partner partner;
+//    private UserProfile userProfile;
+//    private Telemetry telemetry;
     private long startTime;
 
     public Util() {
@@ -83,6 +81,8 @@ public class Util extends Application {
         PartnerDB.initDataBase(this);
 
         PrefUtil.init(this);
+
+        GenieSDK.init(this, PACKAGENAME);
     }
 
     /*
@@ -146,7 +146,7 @@ public class Util extends Application {
     public static void processSuccess(Context context, Object object) {
         GenieResponse response = (GenieResponse) object;
         if (DEBUG)
-            Log.i("Successfull", response.getStatus());
+            Log.i("Successfull", "Status " + response.getStatus());
         if (response.getResult() != null) {
             if (DEBUG)
                 Log.i("Success Gson Response", response.getResult().toString());
@@ -160,7 +160,7 @@ public class Util extends Application {
         if (DEBUG)
             Log.e("Genie Service Error Log", error);
         for (int i = 0; i < response.getErrorMessages().size(); i++) {
-            String errorPos = response.getErrorMessages().get(i);
+            String errorPos = response.getErrorMessages().get(i).toString();
             if (DEBUG)
                 Log.e("Error info", errorPos);
         }
@@ -189,13 +189,13 @@ public class Util extends Application {
         this.startTime = startTime;
     }
 
-    public Telemetry getTelemetry() {
-        return telemetry;
-    }
-
-    public void setTelemetry(Telemetry telemetry) {
-        this.telemetry = telemetry;
-    }
+//    public Telemetry getTelemetry() {
+//        return telemetry;
+//    }
+//
+//    public void setTelemetry(Telemetry telemetry) {
+//        this.telemetry = telemetry;
+//    }
 
     public String getSpinnerSchoolCode_selected() {
         return spinnerSchoolCode_selected;
@@ -213,21 +213,21 @@ public class Util extends Application {
         this.spinnerSchool_selected = spinnerSchool_selected;
     }
 
-    public Partner getPartner() {
-        return partner;
-    }
-
-    public void setPartner(Partner partner) {
-        this.partner = partner;
-    }
-
-    public UserProfile getUserProfile() {
-        return userProfile;
-    }
-
-    public void setUserProfile(UserProfile userProfile) {
-        this.userProfile = userProfile;
-    }
+//    public Partner getPartner() {
+//        return partner;
+//    }
+//
+//    public void setPartner(Partner partner) {
+//        this.partner = partner;
+//    }
+//
+//    public UserProfile getUserProfile() {
+//        return userProfile;
+//    }
+//
+//    public void setUserProfile(UserProfile userProfile) {
+//        this.userProfile = userProfile;
+//    }
 
     public String getLanguage() {
         return language;

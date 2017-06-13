@@ -1,7 +1,8 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieResponse;
-import org.ekstep.genieservices.sdks.response.IResponseHandler;
+
+import org.ekstep.genieservices.commons.IResponseHandler;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 public class EndSessionResponseHandler implements IResponseHandler {
     private IEndSession mIEndSession = null;
@@ -17,7 +18,7 @@ public class EndSessionResponseHandler implements IResponseHandler {
     }
 
     @Override
-    public void onFailure(GenieResponse response) {
+    public void onError(GenieResponse response) {
         // Code to handle error scenario
         mIEndSession.onFailureEndSession(response);
     }

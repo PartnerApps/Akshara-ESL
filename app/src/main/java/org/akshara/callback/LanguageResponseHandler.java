@@ -1,9 +1,10 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieListResponse;
-import org.ekstep.genieservices.sdks.response.IListResponseHandler;
 
-public class LanguageResponseHandler implements IListResponseHandler {
+import org.ekstep.genieservices.commons.IResponseHandler;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
+
+public class LanguageResponseHandler implements IResponseHandler {
     private ILanguage mILanguage = null;
 
     public LanguageResponseHandler(ILanguage language) {
@@ -11,13 +12,13 @@ public class LanguageResponseHandler implements IListResponseHandler {
     }
 
     @Override
-    public void onSuccess(GenieListResponse genieListResponse) {
+    public void onSuccess(GenieResponse genieListResponse) {
         // Code to handle success scenario
         mILanguage.onSuccessLanguage(genieListResponse);
     }
 
     @Override
-    public void onFailure(GenieListResponse genieListResponse) {
+    public void onError(GenieResponse genieListResponse) {
         // Code to handle error scenario
         mILanguage.onFailureLanguage(genieListResponse);
     }

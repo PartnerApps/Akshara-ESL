@@ -80,7 +80,7 @@ public class SearchChildFragment extends Fragment {
                 } else if (spinnerCluster_selected.equals(getString(R.string.cluster_default))) {
                     Toast.makeText(mContext, getString(R.string.cluster_default), Toast.LENGTH_LONG).show();
                 } else if (!spinnerSchool_selected.equals(getString(R.string.school_default))) {
-                    ChildListFragment childListFragment = new ChildListFragment();
+                    NewChildListFragment childListFragment = new NewChildListFragment();
                     util.setSpinnerDistric_selected(spinnerDistric_selected);
                     util.setSpinnerBlock_selected(spinnerBlock_selected);
                     util.setSpinnerCluster_selected(spinnerCluster_selected);

@@ -20,7 +20,6 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.gson.Gson;
 
 import org.akshara.R;
-import org.akshara.Util.TelemetryEventGenertor;
 import org.akshara.Util.Util;
 import org.akshara.callback.DelegateAction;
 import org.akshara.callback.ILanguage;
@@ -30,12 +29,7 @@ import org.akshara.callback.TelemetryResponseHandler;
 import org.akshara.db.DatabaseHandler;
 import org.akshara.db.DatabaseHelper;
 import org.akshara.fragment.SearchChildFragment;
-import org.ekstep.genieservices.sdks.LanguageList;
-import org.ekstep.genieservices.sdks.Partner;
-import org.ekstep.genieservices.sdks.Telemetry;
-import org.ekstep.genieservices.sdks.UserProfile;
-import org.ekstep.genieservices.sdks.response.GenieListResponse;
-import org.ekstep.genieservices.sdks.response.GenieResponse;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -59,10 +53,10 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
     private DrawerLayout mDrawerLayout;
     private MaterialDialog materialDialog;
     private int writeDB = 0;
-    private Partner partner;
-    private UserProfile userProfile;
-    private LanguageList languageList;
-    private Telemetry telemetry;
+//    private Partner partner;
+//    private UserProfile userProfile;
+//    private LanguageList languageList;
+//    private Telemetry telemetry;
     private TelemetryResponseHandler telemetryResponseHandler;
     private LanguageResponseHandler languageResponseHandler;
 
@@ -75,12 +69,12 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
         setContentView(R.layout.activity_home);
 
 
-        /*COPY DB*/
-        if (!doesDatabaseExist(MainActivity.this, DatabaseHandler.DATABASE_NAME)) {
-            copyDB();
-        } else {
-            mDatabaseHandler = new DatabaseHelper(MainActivity.this);
-        }
+//        /*COPY DB*/
+//        if (!doesDatabaseExist(MainActivity.this, DatabaseHandler.DATABASE_NAME)) {
+//            copyDB();
+//        } else {
+//            mDatabaseHandler = new DatabaseHelper(MainActivity.this);
+//        }
         mFragment_mgr = getSupportFragmentManager();
         if (savedInstanceState != null) {
             mFragment = getSupportFragmentManager().findFragmentByTag("mContent");
@@ -113,9 +107,11 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
         mDrawerFragment.setDrawerListener(this);
 
         //get language list
-        languageList = new LanguageList(MainActivity.this);
-        languageResponseHandler = new LanguageResponseHandler(this);
-        languageList.getAll(languageResponseHandler);
+//        languageList = new LanguageList(MainActivity.this);
+//        languageResponseHandler = new LanguageResponseHandler(this);
+//        languageList.getAll(languageResponseHandler);
+
+//        LanguageService languageService = GenieSDK.getGenieSDK().getLanguageService();
 
         displayView(2);
         mToolbar_back.setOnClickListener(new View.OnClickListener() {
@@ -127,17 +123,17 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
         });
 
         //initialitize the partner
-        partner = new Partner(MainActivity.this);
-        userProfile = new UserProfile(MainActivity.this);
-        telemetry = new Telemetry(MainActivity.this);
+//        partner = new Partner(MainActivity.this);
+//        userProfile = new UserProfile(MainActivity.this);
+//        telemetry = new Telemetry(MainActivity.this);
         //Store object
-        Util util = (Util) mContext.getApplicationContext();
-        util.setPartner(partner);
-        util.setUserProfile(userProfile);
-        util.setTelemetry(telemetry);
-        util.setStartTime(System.currentTimeMillis());
-        telemetryResponseHandler = new TelemetryResponseHandler(MainActivity.this);
-        telemetry.send(TelemetryEventGenertor.generateOEStartEvent(mContext).toString(), telemetryResponseHandler);
+//        Util util = (Util) mContext.getApplicationContext();
+//        util.setPartner(partner);
+//        util.setUserProfile(userProfile);
+//        util.setTelemetry(telemetry);
+//        util.setStartTime(System.currentTimeMillis());
+//        telemetryResponseHandler = new TelemetryResponseHandler(MainActivity.this);
+//        telemetry.send(TelemetryEventGenertor.generateOEStartEvent(mContext).toString(), telemetryResponseHandler);
 
 
     }
@@ -352,8 +348,8 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
 
 
     @Override
-    public void onSuccessLanguage(GenieListResponse genieListResponse) {
-        String result = new Gson().toJson(genieListResponse.getResults());
+    public void onSuccessLanguage(GenieResponse genieListResponse) {
+        String result = new Gson().toJson(genieListResponse.getResult());
         if (D)
             Log.d(TAG, " onSuccessLanguage :" + result);
         Util util = (Util) mContext.getApplicationContext();
@@ -363,22 +359,12 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
     }
 
     @Override
-    public void onFailureLanguage(GenieListResponse genieListResponse) {
-        String result = new Gson().toJson(genieListResponse.getResults());
+    public void onFailureLanguage(GenieResponse genieListResponse) {
+        String result = new Gson().toJson(genieListResponse.getResult());
         if (D)
             Log.d(TAG, " onFailureLanguage :" + result);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (D)
-            Log.d(TAG, "onDestroy: userProfile->" + userProfile + " partner-->" + partner);
-        if (userProfile != null)
-            userProfile.finish();
-        if (partner != null)
-            partner.finish();
-    }
 
     @Override
     public void onSuccessTelemetry(GenieResponse genieResponse) {

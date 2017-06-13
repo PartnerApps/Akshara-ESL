@@ -1,9 +1,11 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieResponse;
-import org.ekstep.genieservices.sdks.response.IResponseHandler;
+import org.ekstep.genieservices.commons.IResponseHandler;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
-public class TelemetryResponseHandler implements IResponseHandler {
+import java.util.Map;
+
+public class TelemetryResponseHandler implements IResponseHandler<Map> {
     private ITelemetryData mtelemetryData = null;
 
     public TelemetryResponseHandler(ITelemetryData telemetryData) {
@@ -14,12 +16,15 @@ public class TelemetryResponseHandler implements IResponseHandler {
     public void onSuccess(GenieResponse response) {
         // Code to handle success scenario
         mtelemetryData.onSuccessTelemetry(response);
+
+
     }
 
     @Override
-    public void onFailure(GenieResponse response) {
+    public void onError(GenieResponse response) {
         // Code to handle error scenario
         mtelemetryData.onFailureTelemetry(response);
+
     }
 
 }

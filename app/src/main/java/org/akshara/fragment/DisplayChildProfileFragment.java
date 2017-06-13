@@ -2,7 +2,6 @@ package org.akshara.fragment;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -29,38 +28,40 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedHashTreeMap;
 import com.google.gson.reflect.TypeToken;
 
+import org.akshara.BuildConfig;
 import org.akshara.R;
 import org.akshara.Util.TelemetryEventGenertor;
 import org.akshara.Util.Util;
 import org.akshara.activity.MainActivity;
-import org.akshara.callback.CurrentGetuserResponseHandler;
-import org.akshara.callback.CurrentuserResponseHandler;
+import org.akshara.callback.CurrentGetUserResponseHandler;
+import org.akshara.callback.CurrentUserResponseHandler;
 import org.akshara.callback.EndSessionResponseHandler;
 import org.akshara.callback.ICurrentGetUser;
 import org.akshara.callback.ICurrentUser;
 import org.akshara.callback.IEndSession;
 import org.akshara.callback.IPartnerData;
-import org.akshara.callback.IStartSession;
 import org.akshara.callback.ITelemetryData;
-import org.akshara.callback.IUserProfile;
+import org.akshara.callback.IUserCreateProfile;
 import org.akshara.callback.PartnerDataResponseHandler;
-import org.akshara.callback.StartSessionResponseHandler;
 import org.akshara.callback.TelemetryResponseHandler;
-import org.akshara.callback.UserProfileResponseHandler;
+import org.akshara.callback.UserProfileCreateResponseHandler;
 import org.akshara.customviews.CustomEditText;
 import org.akshara.customviews.CustomTextView;
 import org.akshara.customviews.MyProgressBar;
 import org.akshara.db.StudentDAO;
 import org.akshara.model.Age;
 import org.akshara.model.UserModel;
-import org.akshara.services.WritePartnerDataInFile;
-import org.ekstep.genieservices.aidls.domain.Profile;
-import org.ekstep.genieservices.sdks.Partner;
-import org.ekstep.genieservices.sdks.Telemetry;
-import org.ekstep.genieservices.sdks.UserProfile;
-import org.ekstep.genieservices.sdks.response.GenieResponse;
+import org.ekstep.genieresolvers.GenieSDK;
+import org.ekstep.genieresolvers.partner.PartnerService;
+import org.ekstep.genieresolvers.telemetry.TelemetryService;
+import org.ekstep.genieresolvers.user.UserService;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
+import org.ekstep.genieservices.commons.bean.PartnerData;
+import org.ekstep.genieservices.commons.bean.Profile;
+import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -74,14 +75,18 @@ import java.util.regex.Pattern;
 /**
  * Created by Dhruv on 10/7/2015.
  */
-public class DisplayChildProfileFragment extends Fragment implements IEndSession, IStartSession, IPartnerData,
-        IUserProfile, ICurrentUser, ICurrentGetUser, ITelemetryData {
+public class DisplayChildProfileFragment extends Fragment
+        implements IEndSession, IUserCreateProfile, ICurrentUser, ICurrentGetUser,
+        IPartnerData, ITelemetryData {
+
+    private static final String TAG = "DisplayChildProfileFrag";
+    private static final boolean DEBUG = BuildConfig.DEBUG;
+
     LayoutInflater layoutInflater;
     int editRow = 0;
     boolean flagFocus1stEditText = false;
     int row = 0;
     private boolean D = Util.DEBUG;
-    private String TAG = DisplayChildProfileFragment.class.getSimpleName();
     private Context mContext;
     private Fragment mFragment;
     private Button Register_btn;
@@ -109,17 +114,6 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
     private TextView mTxt_dob = null;
     private View rootView;
     private GradientDrawable gradientDrawable;
-    private Profile profile;
-    private UserProfile userProfile;
-    private UserProfileResponseHandler userProfileResponseHandler;
-    private CurrentuserResponseHandler currentuserSetResponseHandler;
-    private CurrentGetuserResponseHandler currentGetuserResponseHandler;
-    private Partner partner;
-    private StartSessionResponseHandler startSessionResponseHandler;
-    private EndSessionResponseHandler endSessionResponseHandler;
-    private PartnerDataResponseHandler partnerDataResponseHandler;
-    private Telemetry telemetry;
-    private TelemetryResponseHandler telemetryResponseHandler;
     private String UID;
     private String code;
     private String handle = "";
@@ -167,6 +161,13 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
 
         }
     };
+
+
+    private PartnerService mPartnerService;
+
+    private UserService mUserService;
+
+    private Gson mGson = new Gson();
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -404,9 +405,12 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
 
         // hashMapData.put(StudentInfoDb.mother_tongue,code.trim());
         //1. End the session
-        partner = util.getPartner();
-        endSessionResponseHandler = new EndSessionResponseHandler(DisplayChildProfileFragment.this);
-        partner.terminatePartnerSession(Util.partnerId, endSessionResponseHandler);
+        mPartnerService = GenieSDK.getGenieSDK().getPartnerService();
+        PartnerData partnerData = new PartnerData(null, null, Util.partnerId, null, Util.publicKey);
+        EndSessionResponseHandler endSessionResponseHandler = new EndSessionResponseHandler(this);
+        mPartnerService.endPartnerSession(partnerData, endSessionResponseHandler);
+
+
         if (D)
             Log.d(TAG, "hashMapData------>" + hashMapData);
     }
@@ -637,102 +641,53 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
 
     @Override
     public void onSuccessEndSession(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onSuccessEndSession :" + result);
-        //2. Create Profile
-        profile = new Profile(handle, Util.avatar, code);
-        try {
-            profile.setStandard(Integer.parseInt("" + hashMapData.get(StudentDAO.COLUMN_CLASS)));
-            profile.setGender("" + hashMapData.get(StudentDAO.COLUMN_SEX));
-//            profile.setAge(Age.getChildAge(mContext,"" + hashMapData.get(StudentInfoDb.dob)));
-        } catch (Exception e) {
-            if (D) Log.e(TAG, "Exception in profile while setting dynamic form" + e);
+        if (DEBUG) {
+            Log.i(TAG, "onSuccessEndSession: " + mGson.toJson(genieResponse));
         }
-        //userProfile=new UserProfile(getActivity());
-        Util util = (Util) mContext.getApplicationContext();
-        userProfile = util.getUserProfile();
-        userProfileResponseHandler = new UserProfileResponseHandler(DisplayChildProfileFragment.this);
-        userProfile.createUserProfile(profile, userProfileResponseHandler);
 
+        Profile profile = new Profile(handle, Util.avatar, code);
+        profile.setGender(hashMapData.get(StudentDAO.COLUMN_SEX).toString());
 
+        try {
+            profile.setStandard(
+                    Integer.parseInt(hashMapData.get(StudentDAO.COLUMN_CLASS).toString()));
+        } catch (Exception ex) {
+            if (DEBUG) {
+                Log.e(TAG, "onSuccessEndSession: ", ex);
+            }
+        }
+
+        UserProfileCreateResponseHandler userProfileCreateResponseHandler
+                = new UserProfileCreateResponseHandler(this);
+
+        mUserService = GenieSDK.getGenieSDK().getUserService();
+
+        mUserService.createUserProfile(profile, userProfileCreateResponseHandler);
     }
 
     @Override
     public void onFailureEndSession(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onFailureEndSession :" + result);
-        progressBar.setVisibility(View.GONE);
-        scrollViewChildContainer.setVisibility(View.VISIBLE);
-
+        if (DEBUG) {
+            Log.i(TAG, "onFailureEndSession: " + mGson.toJson(genieResponse));
+        }
     }
 
     @Override
-    public void onSuccessSession(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onSuccessSession :" + result + "  UID==>" + UID);
-        //6. send partner data to Genie services
-        partnerDataResponseHandler = new PartnerDataResponseHandler(this);
-       /* Map<String,Object> partnerData=new HashMap<>();
-        partnerData.put(UID,hashMapData);
-       */
-        hashMapData.put(Util.UID, UID);
-        if (D)
-            Log.d(TAG, "partnerData==>" + hashMapData);
+    public void onSuccessUserProfile(GenieResponse<Map> genieResponse) {
+        Gson gson = new Gson();
+        String responseData = gson.toJson(genieResponse);
 
-        partner.sendData(Util.partnerId, hashMapData, partnerDataResponseHandler);
+        if (DEBUG) {
+            Log.d(TAG, "onSuccessUserProfile: " + responseData);
+        }
 
-    }
+        Type type = new TypeToken<LinkedHashTreeMap<String, String>>(){}.getType();
+        Map<String, String> data = gson.fromJson(responseData, type);
 
-    @Override
-    public void onFailureSession(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onFailureSession :" + result);
-        progressBar.setVisibility(View.GONE);
-        scrollViewChildContainer.setVisibility(View.VISIBLE);
+        String uid = data.get("result");
+        hashMapData.put(StudentDAO.COLUMN_UID, uid);
 
-    }
-
-    @Override
-    public void onSuccessPartner(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onSuccessPartner :" + result);
-        progressBar.setVisibility(View.GONE);
-        //7 end telemetry
-        Util util = (Util) mContext.getApplicationContext();
-        telemetry = util.getTelemetry();
-        telemetryResponseHandler = new TelemetryResponseHandler(DisplayChildProfileFragment.this);
-        telemetry.send(TelemetryEventGenertor.generateOEEndEvent(mContext, util.getStartTime(), System.currentTimeMillis(), UID).toString(), telemetryResponseHandler);
-
-
-    }
-
-    @Override
-    public void onFailurePartner(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onFailurePartner :" + result);
-        progressBar.setVisibility(View.GONE);
-        scrollViewChildContainer.setVisibility(View.VISIBLE);
-
-    }
-
-    @Override
-    public void onSuccessUserProfile(GenieResponse genieResponse) {
-        String json = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onSuccessUserProfile json :" + json);
-        Type type = new TypeToken<HashMap<String, String>>() {
-        }.getType();
-        HashMap<String, String> hashMap = new Gson().fromJson(json, type);
-
-        //3. setCurrentUser
-        currentuserSetResponseHandler = new CurrentuserResponseHandler(this);
-        UID = hashMap.get("uid");
+        UID = hashMapData.get("uid").toString();
 
 
         HashMap<String, Object> studentInfo = new HashMap<>();
@@ -743,117 +698,300 @@ public class DisplayChildProfileFragment extends Fragment implements IEndSession
         StudentDAO.getInstance().addNewStudent(studentInfo);
 
 
-        if (getActivity() != null) {
-            Intent intent = new Intent(getActivity(), WritePartnerDataInFile.class);
-            getActivity().startService(intent);
-        }
+        // TODO: 13/6/17 Later We can enable this
+//        if (getActivity() != null) {
+//            Intent intent = new Intent(getActivity(), WritePartnerDataInFile.class);
+//            getActivity().startService(intent);
+//        }
 
-        if (D)
-            Log.d(TAG, "onSuccessUserProfile profile.getUid() :" + UID);
-        userProfile.setCurrentUser(UID, currentuserSetResponseHandler);
+        CurrentUserResponseHandler currentUserResponseHandler = new CurrentUserResponseHandler(this);
+
+        mUserService.setUser(UID, currentUserResponseHandler);
 
     }
 
     @Override
-    public void onFailureUserprofile(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onFailureUserprofile :" + result);
-        progressBar.setVisibility(View.GONE);
-        scrollViewChildContainer.setVisibility(View.VISIBLE);
-
+    public void onFailureUserProfile(GenieResponse<Map> genieResponse) {
+        if (DEBUG) {
+            Log.i(TAG, "onFailureUserProfile: " + mGson.toJson(genieResponse));
+        }
     }
 
     @Override
     public void onSuccessCurrentUser(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onSuccessCurrentUser :" + result);
-        //4. getCurrentUser
-        currentGetuserResponseHandler = new CurrentGetuserResponseHandler(this);
-        userProfile.getCurrentUser(currentGetuserResponseHandler);
+        if (DEBUG) {
+            Log.i(TAG, "onSuccessCurrentUser: " + mGson.toJson(genieResponse));
+        }
 
+        CurrentGetUserResponseHandler currentGetUserResponseHandler
+                = new CurrentGetUserResponseHandler(this);
+
+        mUserService.getCurrentUser(currentGetUserResponseHandler);
     }
 
     @Override
     public void onFailureCurrentUser(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onFailureCurrentUser :" + result);
-        progressBar.setVisibility(View.GONE);
-        scrollViewChildContainer.setVisibility(View.VISIBLE);
-
+        if (DEBUG) {
+            Log.i(TAG, "onFailureCurrentUser: " + mGson.toJson(genieResponse));
+        }
     }
 
     @Override
     public void onSuccessCurrentGetUser(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onSuccessCurrentGetUser :" + result);
-        //5. start session
-        //partner=new Partner(getActivity());
-        startSessionResponseHandler = new StartSessionResponseHandler(this);
-        partner.startPartnerSession(Util.partnerId, startSessionResponseHandler);
+        if (DEBUG) {
+            Log.i(TAG, "onSuccessCurrentGetUser: " + mGson.toJson(genieResponse));
+        }
+
+        hashMapData.put(StudentDAO.COLUMN_UID, UID);
+
+        JSONObject partnerJSONObject = new JSONObject(hashMapData);
+
+        PartnerDataResponseHandler responseHandler = new PartnerDataResponseHandler(this);
+
+        PartnerData partnerData = new PartnerData(null, null, Util.partnerId,
+                partnerJSONObject.toString(), Util.publicKey);
+
+        mPartnerService.sendPartnerData(partnerData, responseHandler);
     }
 
     @Override
     public void onFailureCurrentGetUser(GenieResponse genieResponse) {
-        String result = new Gson().toJson(genieResponse.getResult());
-        if (D)
-            Log.d(TAG, "onFailureCurrentGetUser :" + result);
-        progressBar.setVisibility(View.GONE);
-        scrollViewChildContainer.setVisibility(View.VISIBLE);
-
-    }
-
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        if (D)
-            Log.d(TAG, "onDetach");
-
+        if (DEBUG) {
+            Log.i(TAG, "onFailureCurrentGetUser: " + mGson.toJson(genieResponse));
+        }
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (D)
-            Log.d(TAG, "onDestroyView");
+    public void onSuccessPartner(GenieResponse genieResponse) {
+        if (DEBUG) {
+            Log.i(TAG, "onSuccessPartner: " + mGson.toJson(genieResponse));
+        }
+
+        Util util = (Util) getActivity().getApplicationContext();
+
+        TelemetryResponseHandler telemetryResponseHandler = new TelemetryResponseHandler(this);
+
+        String telemetryJSONData = TelemetryEventGenertor.generateOEEndEvent(getActivity(),
+                util.getStartTime(), System.currentTimeMillis(), UID).toString();
+
+        TelemetryService telemetryService = GenieSDK.getGenieSDK().getTelemetryService();
+
+        telemetryService.saveTelemetryEvent(telemetryJSONData, telemetryResponseHandler);
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (D)
-            Log.d(TAG, "onDestroy partner--->" + partner);
-
-
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (D)
-            Log.d(TAG, "onStop :userProfile->" + userProfile + " partner--> " + partner);
+    public void onFailurePartner(GenieResponse genieResponse) {
+        if (DEBUG) {
+            Log.i(TAG, "onFailurePartner: " + mGson.toJson(genieResponse));
+        }
     }
 
     @Override
     public void onSuccessTelemetry(GenieResponse genieResponse) {
-        if (D)
-            Log.d(TAG, "-------------------------------------------------------------------onSuccessTelemetry");
+        if (DEBUG) {
+            Log.i(TAG, "onSuccessTelemetry: " + mGson.toJson(genieResponse));
+        }
 
         Util.processSuccess(mContext, genieResponse);
         //8 exit the app
         ((MainActivity) mContext).exitApp();
-
     }
 
     @Override
     public void onFailureTelemetry(GenieResponse genieResponse) {
-        if (D)
-            Log.d(TAG, "-------------------------------------------------------------------onFailureTelemetry");
-
-        Util.processSendFailure(mContext, genieResponse);
+        if (DEBUG) {
+            Log.i(TAG, "onFailureTelemetry: " + mGson.toJson(genieResponse));
+        }
     }
+
+    //    @Override
+//    public void onSuccessEndSession(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onSuccessEndSession :" + result);
+//        //2. Create Profile
+//        profile = new Profile(handle, Util.avatar, code);
+//        try {
+//            profile.setStandard(Integer.parseInt("" + hashMapData.get(StudentDAO.COLUMN_CLASS)));
+//            profile.setGender("" + hashMapData.get(StudentDAO.COLUMN_SEX));
+////            profile.setAge(Age.getChildAge(mContext,"" + hashMapData.get(StudentInfoDb.dob)));
+//        } catch (Exception e) {
+//            if (D) Log.e(TAG, "Exception in profile while setting dynamic form" + e);
+//        }
+//        //userProfile=new UserProfile(getActivity());
+//        Util util = (Util) mContext.getApplicationContext();
+//        userProfile = util.getUserProfile();
+//        userProfileResponseHandler = new UserProfileResponseHandler(DisplayChildProfileFragment.this);
+//        userProfile.createUserProfile(profile, userProfileResponseHandler);
+//
+//
+//    }
+//
+//    @Override
+//    public void onFailureEndSession(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onFailureEndSession :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        scrollViewChildContainer.setVisibility(View.VISIBLE);
+//
+//    }
+//
+//    @Override
+//    public void onSuccessSession(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onSuccessSession :" + result + "  UID==>" + UID);
+//        //6. send partner data to Genie services
+//        partnerDataResponseHandler = new PartnerDataResponseHandler(this);
+//       /* Map<String,Object> partnerData=new HashMap<>();
+//        partnerData.put(UID,hashMapData);
+//       */
+//        hashMapData.put(Util.UID, UID);
+//        if (D)
+//            Log.d(TAG, "partnerData==>" + hashMapData);
+//
+//        partner.sendData(Util.partnerId, hashMapData, partnerDataResponseHandler);
+//
+//    }
+//
+//    @Override
+//    public void onFailureSession(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onFailureSession :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        scrollViewChildContainer.setVisibility(View.VISIBLE);
+//
+//    }
+//
+//    @Override
+//    public void onSuccessPartner(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onSuccessPartner :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        //7 end telemetry
+//        Util util = (Util) mContext.getApplicationContext();
+//        telemetry = util.getTelemetry();
+//        telemetryResponseHandler = new TelemetryResponseHandler(DisplayChildProfileFragment.this);
+//        telemetry.send(TelemetryEventGenertor.generateOEEndEvent(mContext, util.getStartTime(), System.currentTimeMillis(), UID).toString(), telemetryResponseHandler);
+//
+//
+//    }
+//
+//    @Override
+//    public void onFailurePartner(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onFailurePartner :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        scrollViewChildContainer.setVisibility(View.VISIBLE);
+//
+//    }
+//
+//    @Override
+//    public void onSuccessUserProfile(GenieResponse genieResponse) {
+//        String json = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onSuccessUserProfile json :" + json);
+//        Type type = new TypeToken<HashMap<String, String>>() {
+//        }.getType();
+//        HashMap<String, String> hashMap = new Gson().fromJson(json, type);
+//
+//        //3. setCurrentUser
+//        currentuserSetResponseHandler = new CurrentuserResponseHandler(this);
+//        UID = hashMap.get("uid");
+//
+//
+//        HashMap<String, Object> studentInfo = new HashMap<>();
+//        studentInfo.putAll(hashMapData);
+//        studentInfo.put(StudentDAO.COLUMN_UID, UID);
+//        studentInfo.put(StudentDAO.COLUMN_SYNC, 1);
+//
+//        StudentDAO.getInstance().addNewStudent(studentInfo);
+//
+//
+//        if (getActivity() != null) {
+//            Intent intent = new Intent(getActivity(), WritePartnerDataInFile.class);
+//            getActivity().startService(intent);
+//        }
+//
+//        if (D)
+//            Log.d(TAG, "onSuccessUserProfile profile.getUid() :" + UID);
+//        userProfile.setCurrentUser(UID, currentuserSetResponseHandler);
+//
+//    }
+//
+//    @Override
+//    public void onFailureUserprofile(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onFailureUserprofile :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        scrollViewChildContainer.setVisibility(View.VISIBLE);
+//
+//    }
+//
+//    @Override
+//    public void onSuccessCurrentUser(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onSuccessCurrentUser :" + result);
+//        //4. getCurrentUser
+//        currentGetuserResponseHandler = new CurrentGetuserResponseHandler(this);
+//        userProfile.getCurrentUser(currentGetuserResponseHandler);
+//
+//    }
+//
+//    @Override
+//    public void onFailureCurrentUser(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onFailureCurrentUser :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        scrollViewChildContainer.setVisibility(View.VISIBLE);
+//
+//    }
+//
+//    @Override
+//    public void onSuccessCurrentGetUser(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onSuccessCurrentGetUser :" + result);
+//        //5. start session
+//        //partner=new Partner(getActivity());
+//        startSessionResponseHandler = new StartSessionResponseHandler(this);
+//        partner.startPartnerSession(Util.partnerId, startSessionResponseHandler);
+//    }
+//
+//    @Override
+//    public void onFailureCurrentGetUser(GenieResponse genieResponse) {
+//        String result = new Gson().toJson(genieResponse.getResult());
+//        if (D)
+//            Log.d(TAG, "onFailureCurrentGetUser :" + result);
+//        progressBar.setVisibility(View.GONE);
+//        scrollViewChildContainer.setVisibility(View.VISIBLE);
+//
+//    }
+//
+//
+//    @Override
+//    public void onSuccessTelemetry(GenieResponse genieResponse) {
+//        if (D)
+//            Log.d(TAG, "-------------------------------------------------------------------onSuccessTelemetry");
+//
+//        Util.processSuccess(mContext, genieResponse);
+//        //8 exit the app
+//        ((MainActivity) mContext).exitApp();
+//
+//    }
+//
+//    @Override
+//    public void onFailureTelemetry(GenieResponse genieResponse) {
+//        if (D)
+//            Log.d(TAG, "-------------------------------------------------------------------onFailureTelemetry");
+//
+//        Util.processSendFailure(mContext, genieResponse);
+//    }
 }

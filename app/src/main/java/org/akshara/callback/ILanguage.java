@@ -1,13 +1,14 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieListResponse;
+
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 /**
  * Created by Jaya on 10/5/2015.
  */
 public interface ILanguage {
 
-    public void onSuccessLanguage(GenieListResponse genieListResponse);
+     void onSuccessLanguage(GenieResponse genieListResponse);
 
-    public void onFailureLanguage(GenieListResponse genieListResponse);
+     void onFailureLanguage(GenieResponse genieListResponse);
 }

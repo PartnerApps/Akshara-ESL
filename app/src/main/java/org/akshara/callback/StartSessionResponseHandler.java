@@ -1,7 +1,8 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieResponse;
-import org.ekstep.genieservices.sdks.response.IResponseHandler;
+
+import org.ekstep.genieservices.commons.IResponseHandler;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 public class StartSessionResponseHandler implements IResponseHandler {
     private IStartSession mIStartSession = null;
@@ -18,7 +19,7 @@ public class StartSessionResponseHandler implements IResponseHandler {
     }
 
     @Override
-    public void onFailure(GenieResponse response) {
+    public void onError(GenieResponse response) {
         // Code to handle error scenario
         mIStartSession.onFailureSession(response);
     }

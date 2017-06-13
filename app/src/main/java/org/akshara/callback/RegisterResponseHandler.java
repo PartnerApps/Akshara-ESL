@@ -1,7 +1,8 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieResponse;
-import org.ekstep.genieservices.sdks.response.IResponseHandler;
+
+import org.ekstep.genieservices.commons.IResponseHandler;
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 public class RegisterResponseHandler implements IResponseHandler {
     private IRegister mRegister = null;
@@ -11,17 +12,13 @@ public class RegisterResponseHandler implements IResponseHandler {
     }
 
     @Override
-    public void onSuccess(GenieResponse response) {
-        // Code to handle success scenario
-        mRegister.onSuccess(response);
-
+    public void onSuccess(GenieResponse genieResponse) {
+        mRegister.onSuccess(genieResponse);
     }
 
     @Override
-    public void onFailure(GenieResponse response) {
-        // Code to handle error scenario
-        mRegister.onFailure(response);
+    public void onError(GenieResponse genieResponse) {
+        mRegister.onFailure(genieResponse);
     }
-
 }
 

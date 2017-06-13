@@ -1,13 +1,14 @@
 package org.akshara.callback;
 
-import org.ekstep.genieservices.sdks.response.GenieResponse;
+
+import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 /**
  * Created by Jaya on 10/5/2015.
  */
 public interface IStartSession {
 
-    public void onSuccessSession(GenieResponse genieResponse);
+    void onSuccessSession(GenieResponse genieResponse);
 
-    public void onFailureSession(GenieResponse genieResponse);
+    void onFailureSession(GenieResponse genieResponse);
 }
