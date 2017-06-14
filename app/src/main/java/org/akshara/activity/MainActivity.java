@@ -29,6 +29,8 @@ import org.akshara.callback.TelemetryResponseHandler;
 import org.akshara.db.DatabaseHandler;
 import org.akshara.db.DatabaseHelper;
 import org.akshara.fragment.SearchChildFragment;
+import org.ekstep.genieresolvers.GenieSDK;
+import org.ekstep.genieresolvers.language.LanguageService;
 import org.ekstep.genieservices.commons.bean.GenieResponse;
 
 import java.io.File;
@@ -107,11 +109,10 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
         mDrawerFragment.setDrawerListener(this);
 
         //get language list
-//        languageList = new LanguageList(MainActivity.this);
-//        languageResponseHandler = new LanguageResponseHandler(this);
-//        languageList.getAll(languageResponseHandler);
+        languageResponseHandler = new LanguageResponseHandler(this);
+        LanguageService languageService = GenieSDK.getGenieSDK().getLanguageService();
 
-//        LanguageService languageService = GenieSDK.getGenieSDK().getLanguageService();
+        languageService.getAllLanguages(languageResponseHandler);
 
         displayView(2);
         mToolbar_back.setOnClickListener(new View.OnClickListener() {

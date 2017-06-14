@@ -4,7 +4,9 @@ package org.akshara.callback;
 import org.ekstep.genieservices.commons.IResponseHandler;
 import org.ekstep.genieservices.commons.bean.GenieResponse;
 
-public class LanguageResponseHandler implements IResponseHandler {
+import java.util.Map;
+
+public class LanguageResponseHandler implements IResponseHandler<Map> {
     private ILanguage mILanguage = null;
 
     public LanguageResponseHandler(ILanguage language) {
