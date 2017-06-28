@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements DelegateAction, N
 
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-            intent.putExtra("audience","learner");
+//            intent.putExtra("audience","learner");
 //            intent.putExtra("channel","AP_1");
             HashMap<String,String> programTag=new HashMap<>();
             programTag.put("name", Util.partnerId);

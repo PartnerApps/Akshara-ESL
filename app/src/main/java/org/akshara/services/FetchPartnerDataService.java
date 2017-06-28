@@ -40,7 +40,7 @@ public class FetchPartnerDataService extends IntentService {
 
     private static final boolean DEBUG = BuildConfig.DEBUG;
 
-    private static final String PARTNER_DATA_FILE_ID = "1EA6jWSn4mEmy2vod-S5vxykkdTWmciEkfFXbDV1FVFU";
+    private static final String PARTNER_DATA_FILE_ID = "1FhIEi8rayNILnA23sFyPi-a1keV2xw772Z5rEmUookY";
 
     private static final String SHEETS_DATA_RANGE = "student_info!A2:J";
 
