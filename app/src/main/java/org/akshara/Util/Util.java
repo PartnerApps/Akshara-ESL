@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Environment;
+import android.support.multidex.MultiDexApplication;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
@@ -28,7 +29,7 @@ import java.util.HashMap;
 /**
  * Created by Jaya on 9/24/2015.
  */
-public class Util extends Application {
+public class Util extends MultiDexApplication {
     public static final boolean DEBUG = false;
     public static final String PACKAGENAME = "org.ekstep.genieservices";
     public static final String partnerId = "org.ekstep.partner.akshara";
@@ -82,7 +83,7 @@ public class Util extends Application {
 
         PrefUtil.init(this);
 
-        GenieSDK.init(this, "org.ekstep.genie");
+        GenieSDK.init(this, "org.ekstep.genieservices");
     }
 
     /*
