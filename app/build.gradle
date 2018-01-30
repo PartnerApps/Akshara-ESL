@@ -19,7 +19,7 @@ android {
         applicationId "org.akshara.esl"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 2
+        versionCode 3
         versionName "1.0.$buildNumber"
 
         multiDexEnabled true
